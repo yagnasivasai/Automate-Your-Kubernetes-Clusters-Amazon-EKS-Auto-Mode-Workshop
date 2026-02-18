@@ -1,0 +1,3004 @@
+{
+ "Description": "Creates the lab environment for the workshop",
+ "Parameters": {
+  "HelmVersion": {
+   "Type": "String",
+   "Default": "3.17.0"
+  },
+  "RetailStoreHelmChartVersion": {
+   "Type": "String",
+   "Default": "1.1.0"
+  },
+  "KubernetesVersion": {
+   "Type": "String",
+   "Default": "1.33"
+  },
+  "EksClusterName": {
+   "Type": "String",
+   "Default": "demo-cluster"
+  },
+  "EksClusterNameForMigrations": {
+   "Type": "String",
+   "Default": "migration-cluster"
+  },
+  "ParticipantRoleArn": {
+   "Type": "String"
+  },
+  "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+   "Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64"
+  }
+ },
+ "Resources": {
+  "SharedRoleD1D02F7E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": [
+         "codebuild.amazonaws.com",
+         "ec2.amazonaws.com"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/IAMFullAccess"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEC2FullAccess"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/CloudWatchFullAccessV2"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonS3ReadOnlyAccess"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AdministratorAccess"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonSSMManagedInstanceCore"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "SharedRoleDefaultPolicyA7803C87": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "eks:*",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":log-group:/aws/codebuild/",
+           {
+            "Ref": "EksAmWsBaseClusterCreationStackDeployProjectE4434511"
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":log-group:/aws/codebuild/",
+           {
+            "Ref": "EksAmWsBaseClusterCreationStackDeployProjectE4434511"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":log-group:/aws/codebuild/",
+           {
+            "Ref": "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991"
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":logs:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":log-group:/aws/codebuild/",
+           {
+            "Ref": "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991"
+           }
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:BatchPutCodeCoverages",
+        "codebuild:BatchPutTestCases",
+        "codebuild:CreateReport",
+        "codebuild:CreateReportGroup",
+        "codebuild:UpdateReport"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codebuild:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":report-group/",
+           {
+            "Ref": "EksAmWsBaseClusterCreationStackDeployProjectE4434511"
+           },
+           "-*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":codebuild:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":report-group/",
+           {
+            "Ref": "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991"
+           },
+           "-*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EksAmWsAutoIDEIdeLogGroup870441C6",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SharedRoleDefaultPolicyA7803C87",
+    "Roles": [
+     {
+      "Ref": "SharedRoleD1D02F7E"
+     }
+    ]
+   }
+  },
+  "DemoClusterNodeRoleE31E9BBC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ec2.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "MigrationClusterNodeRole8F3A3E1F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ec2.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "DemoClusterRoleE1419134": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "eks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEKSClusterPolicy"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "MigrationClusterRole5195CA93": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "eks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEKSClusterPolicy"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "EKSFargateRole3D314CBF": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "eks-fargate-pods.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "EksAmWsBaseClusterCreationStackDeployProjectE4434511": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "HELM_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "HelmVersion"
+       }
+      },
+      {
+       "Name": "AWS_REGION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "AWS::Region"
+       }
+      },
+      {
+       "Name": "RETAIL_STORE_APP_HELM_CHART_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "RetailStoreHelmChartVersion"
+       }
+      },
+      {
+       "Name": "NODE_ROLE",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Fn::GetAtt": [
+         "DemoClusterNodeRoleE31E9BBC",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Name": "CLUSTER_ROLE",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Fn::GetAtt": [
+         "DemoClusterRoleE1419134",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Name": "CLUSTER_NAME",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "EksClusterName"
+       }
+      },
+      {
+       "Name": "MIGRATION_CLUSTER_NAME",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "EksClusterNameForMigrations"
+       }
+      }
+     ],
+     "Image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "SharedRoleD1D02F7E",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "version: 0.2\nenv:\n  shell: bash\n  variables:\n    REQUESTED_ACTION: Create\n    KUBERNETES_VERSION: \"1.32\"\n    HELM_VERSION: \"\"\n    AWS_REGION: \"\"\n    RETAIL_STORE_APP_HELM_CHART_VERSION: \"\"\n    NODE_ROLE: \"\"\n    CLUSTER_ROLE: \"\"\n    CLUSTER_NAME: \"\"\n    MIGRATION_CLUSTER_NAME: \"\"\nphases:\n  install:\n    on-failure: ABORT\n    commands: |\n      set -e\n\n      # Uninstall AWS CLI v1\n      pip3 uninstall -y awscli\n\n      # AWS CLI v2\n      curl -Lqs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip\n      unzip -o -q /tmp/awscliv2.zip -d /tmp/awscliv2\n      /tmp/awscliv2/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update\n      rm -rf /tmp/awscliv2.zip /tmp/awscliv2\n      aws --version\n\n      # Helm\n      curl -Lqs https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -o /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz\n      tar --strip-components=1 -C /usr/bin -xzf /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz linux-amd64/helm\n      chmod +x /usr/bin/helm\n      rm -rf /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz\n      helm version\n\n      # for ARM systems, set ARCH to: `arm64`, `armv6` or `armv7`\n      ARCH=amd64\n      PLATFORM=$(uname -s)_$ARCH\n\n      curl -sLO \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz\"\n\n      # (Optional) Verify checksum\n      curl -sL \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt\" | grep $PLATFORM | sha256sum --check\n\n      tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz\n\n      sudo mv /tmp/eksctl /usr/local/bin\n  pre_build:\n    on-failure: ABORT\n    commands: |\n      set -e\n\n      export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query \"Account\" --output text)\n  build:\n    on-failure: ABORT\n    commands:\n      - |\n        set -e\n        set -o pipefail\n\n        if [[ $REQUESTED_ACTION == 'Delete' ]]; then\n          echo \"Requested Action: Delete\"\n\n          aws eks update-kubeconfig --name ${CLUSTER_NAME}\n\n          kubectl delete svc catalog-nlb || true\n          kubectl delete ingress --all\n\n          ######## HELM RELEASES ######## \n          # Get all Helm releases in all namespaces\n          RELEASES=$(helm list --all-namespaces --output json | jq -c '.[]')\n          if [ -z \"$RELEASES\" ]; then\n            echo \"No Helm releases found in the cluster.\"\n          else\n            echo \"Uninstalling all Helm releases...\"\n            # Loop through each release and uninstall it\n            echo \"$RELEASES\" | while IFS= read -r release; do\n              RELEASE_NAME=$(echo \"$release\" | jq -r '.name')\n              NAMESPACE=$(echo \"$release\" | jq -r '.namespace')\n              echo \"Uninstalling release '$RELEASE_NAME' from namespace '$NAMESPACE'...\"\n              helm uninstall \"$RELEASE_NAME\" -n \"$NAMESPACE\"\n            done\n          fi    \n          ######## HELM RELEASES ########\n\n          eksctl delete cluster  --name ${CLUSTER_NAME} --region ${AWS_REGION}\n\n        else\n          echo \"Requested Action: ${REQUESTED_ACTION}\"\n\n          # Create a bare EKS cluster - no addons & auto-mode disabled\n\n          cat <<EOF| eksctl create cluster -f -\n          apiVersion: eksctl.io/v1alpha5\n          kind: ClusterConfig\n          metadata:\n            name: ${CLUSTER_NAME}\n            region: ${AWS_REGION}\n            version: \"${KUBERNETES_VERSION}\"\n            tags:\n              provisioned-by: eks-automode-workshop\n          availabilityZones:\n        $(aws ec2 describe-availability-zones \\\n            --region ${AWS_REGION} \\\n            --filters \"Name=opt-in-status,Values=opt-in-not-required\" \\\n            --query \"AvailabilityZones[?ZoneId!='use1-az3'].[ZoneName][:3]\" \\\n            --output text | sed 's/ /, /g; s/^/   - /')\n          iam:\n            withOIDC: true\n            serviceRoleARN: ${CLUSTER_ROLE}\n          addonsConfig:\n            disableDefaultAddons: true\n          managedNodeGroups: []\n          cloudWatch:\n            clusterLogging:\n              enableTypes: [\"*\"]\n        EOF\n        fi\n\n        eksctl get clusters\n",
+     "Type": "NO_SOURCE"
+    },
+    "TimeoutInMinutes": 30
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codebuild:StartBuild",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "Roles": [
+     {
+      "Ref": "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "// This function is based on the cfnresponse JS module that is published\n// by CloudFormation. It's an async function that makes coding much easier.\nconst respond = async function(event, context, responseStatus, responseData, physicalResourceId, noEcho) {\n  return new Promise((resolve, reject) => {\n    var responseBody = JSON.stringify({\n        Status: responseStatus,\n        Reason: \"See the details in CloudWatch Log Stream: \" + context.logGroupName + \" \" + context.logStreamName,\n        PhysicalResourceId: physicalResourceId || context.logStreamName,\n        StackId: event.StackId,\n        RequestId: event.RequestId,\n        LogicalResourceId: event.LogicalResourceId,\n        NoEcho: noEcho || false,\n        Data: responseData\n    });\n\n    console.log(\"Response body:\\\\n\", responseBody);\n\n    var https = require(\"https\");\n    var url = require(\"url\");\n\n    var parsedUrl = url.parse(event.ResponseURL);\n    var options = {\n        hostname: parsedUrl.hostname,\n        port: 443,\n        path: parsedUrl.path,\n        method: \"PUT\",\n        headers: {\n            \"content-type\": \"\",\n            \"content-length\": responseBody.length\n        }\n    };\n\n    var request = https.request(options, function(response) {\n        console.log(\"Status code: \" + response.statusCode);\n        console.log(\"Status message: \" + response.statusMessage);\n        resolve();\n    });\n\n    request.on(\"error\", function(error) {\n        console.log(\"respond(..) failed executing https.request(..): \" + error);\n        resolve();\n    });\n\n    request.write(responseBody);\n    request.end();\n  });\n};\nconst AWS = require('aws-sdk');\n\nexports.handler = async function (event, context) {\n  console.log(JSON.stringify(event, null, 4));\n  try {\n    const projectName = event.ResourceProperties.ProjectName;\n    const codeBuildIamRoleArn = event.ResourceProperties.CodeBuildIamRoleArn\n\n    const codebuild = new AWS.CodeBuild();\n\n    console.log(`Starting new build of project ${projectName}`);\n\n    const { build } = await codebuild.startBuild({\n      projectName,\n      // Pass CFN related parameters through the build for extraction by the\n      // completion handler.\n      environmentVariablesOverride: [\n        {\n          name: 'CFN_RESPONSE_URL',\n          value: event.ResponseURL\n        },\n        {\n          name: 'CFN_STACK_ID',\n          value: event.StackId\n        },\n        {\n          name: 'CFN_REQUEST_ID',\n          value: event.RequestId\n        },\n        {\n          name: 'CFN_LOGICAL_RESOURCE_ID',\n          value: event.LogicalResourceId\n        },\n        {\n          name: 'REQUESTED_ACTION',\n          value: event.RequestType\n        },\n        {\n          name: 'RESOURCE_CODEBUILD_ROLE_ARN',\n          value: codeBuildIamRoleArn\n        }\n      ]\n    }).promise();\n    console.log(`Build id ${build.id} started - resource completion handled by EventBridge`);\n  } catch(error) {\n    console.error(error);\n    await respond(event, context, 'FAILED', { Error: error });\n  }\n};\n"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs16.x",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA"
+   ]
+  },
+  "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:ListBuildsForProject"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "Roles": [
+     {
+      "Ref": "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "// This function is based on the cfnresponse JS module that is published\n// by CloudFormation. It's an async function that makes coding much easier.\nconst respond = async function(event, context, responseStatus, responseData, physicalResourceId, noEcho) {\n  return new Promise((resolve, reject) => {\n    var responseBody = JSON.stringify({\n        Status: responseStatus,\n        Reason: \"See the details in CloudWatch Log Stream: \" + context.logGroupName + \" \" + context.logStreamName,\n        PhysicalResourceId: physicalResourceId || context.logStreamName,\n        StackId: event.StackId,\n        RequestId: event.RequestId,\n        LogicalResourceId: event.LogicalResourceId,\n        NoEcho: noEcho || false,\n        Data: responseData\n    });\n\n    console.log(\"Response body:\\\\n\", responseBody);\n\n    var https = require(\"https\");\n    var url = require(\"url\");\n\n    var parsedUrl = url.parse(event.ResponseURL);\n    var options = {\n        hostname: parsedUrl.hostname,\n        port: 443,\n        path: parsedUrl.path,\n        method: \"PUT\",\n        headers: {\n            \"content-type\": \"\",\n            \"content-length\": responseBody.length\n        }\n    };\n\n    var request = https.request(options, function(response) {\n        console.log(\"Status code: \" + response.statusCode);\n        console.log(\"Status message: \" + response.statusMessage);\n        resolve();\n    });\n\n    request.on(\"error\", function(error) {\n        console.log(\"respond(..) failed executing https.request(..): \" + error);\n        resolve();\n    });\n\n    request.write(responseBody);\n    request.end();\n  });\n};\nconst AWS = require('aws-sdk');\n\nexports.handler = async function (event, context) {\n  console.log(JSON.stringify(event, null, 4));\n\n  const projectName = event['detail']['project-name'];\n\n  const codebuild = new AWS.CodeBuild();\n\n  const buildId = event['detail']['build-id'];\n  const { builds } = await codebuild.batchGetBuilds({\n    ids: [ buildId ]\n  }).promise();\n\n  console.log(JSON.stringify(builds, null, 4));\n\n  const build = builds[0];\n  // Fetch the CFN resource and response parameters from the build environment.\n  const environment = {};\n  build.environment.environmentVariables.forEach(e => environment[e.name] = e.value);\n\n  const response = {\n    ResponseURL: environment.CFN_RESPONSE_URL,\n    StackId: environment.CFN_STACK_ID,\n    LogicalResourceId: environment.CFN_LOGICAL_RESOURCE_ID,\n    RequestId: environment.CFN_REQUEST_ID\n  };\n\n  if (event['detail']['build-status'] === 'SUCCEEDED') {\n    await respond(response, context, 'SUCCESS', {}, 'build');\n  } else {\n    await respond(response, context, 'FAILED', { Error: 'Build failed' });\n  }\n};\n"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs16.x",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0"
+   ]
+  },
+  "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Build complete",
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "build-status": [
+       "SUCCEEDED",
+       "FAILED",
+       "STOPPED"
+      ],
+      "project-name": [
+       {
+        "Ref": "EksAmWsBaseClusterCreationStackDeployProjectE4434511"
+       }
+      ]
+     }
+    },
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+        "Arn"
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134"
+   ]
+  },
+  "EksAmWsBaseClusterCreationClusterStackFC310D2C": {
+   "Type": "AWS::CloudFormation::CustomResource",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+      "Arn"
+     ]
+    },
+    "ProjectName": {
+     "Ref": "EksAmWsBaseClusterCreationStackDeployProjectE4434511"
+    },
+    "CodeBuildIamRoleArn": {
+     "Fn::GetAtt": [
+      "SharedRoleD1D02F7E",
+      "Arn"
+     ]
+    },
+    "ContentHash": "3b9f20b72c5a07f3cb4c2a40b26864d6"
+   },
+   "DependsOn": [
+    "DemoClusterNodeRoleE31E9BBC",
+    "DemoClusterRoleE1419134",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Type": "NO_CACHE"
+    },
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "HELM_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "HelmVersion"
+       }
+      },
+      {
+       "Name": "AWS_REGION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "AWS::Region"
+       }
+      },
+      {
+       "Name": "RETAIL_STORE_APP_HELM_CHART_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "RetailStoreHelmChartVersion"
+       }
+      },
+      {
+       "Name": "NODE_ROLE",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Fn::GetAtt": [
+         "MigrationClusterNodeRole8F3A3E1F",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Name": "FARGATE_ROLE",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Fn::GetAtt": [
+         "EKSFargateRole3D314CBF",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Name": "CLUSTER_ROLE",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Fn::GetAtt": [
+         "MigrationClusterRole5195CA93",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Name": "KUBERNETES_VERSION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "KubernetesVersion"
+       }
+      },
+      {
+       "Name": "CLUSTER_NAME",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "EksClusterName"
+       }
+      },
+      {
+       "Name": "MIGRATION_CLUSTER_NAME",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "EksClusterNameForMigrations"
+       }
+      }
+     ],
+     "Image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "SharedRoleD1D02F7E",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "version: 0.2\nenv:\n  shell: bash\n  variables:\n    REQUESTED_ACTION: Create\n    HELM_VERSION: \"\"\n    AWS_REGION: \"\"\n    RETAIL_STORE_APP_HELM_CHART_VERSION: 1.1.0\n    NODE_ROLE: \"\"\n    FARGATE_ROLE: \"\"\n    CLUSTER_ROLE: \"\"\n    CLUSTER_NAME: \"\"\n    MIGRATION_CLUSTER_NAME: \"\"\n    KUBERNETES_VERSION: \"1.33\"\n    KARPENTER_VERSION: 1.5.0\n    KARPENTER_NAMESPACE: kube-system\n    AWS_PARTITION: aws\nphases:\n  install:\n    on-failure: ABORT\n    commands:\n      - |\n        set -e\n        pip3 uninstall -y awscli\n        curl -Lqs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip\n        unzip -o -q /tmp/awscliv2.zip -d /tmp/awscliv2\n        /tmp/awscliv2/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update\n        rm -rf /tmp/awscliv2.zip /tmp/awscliv2\n        aws --version\n        curl -Lqs https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -o /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz\n        tar --strip-components=1 -C /usr/bin -xzf /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz linux-amd64/helm\n        chmod +x /usr/bin/helm\n        rm -rf /tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz\n        helm version\n        ARCH=amd64\n        PLATFORM=$(uname -s)_$ARCH\n        curl -sLO \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz\"\n        curl -sL \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt\" | grep $PLATFORM | sha256sum --check\n        tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz\n        sudo mv /tmp/eksctl /usr/local/bin\n  pre_build:\n    on-failure: ABORT\n    commands:\n      - |\n        set -e\n        export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query \"Account\" --output text)\n  build:\n    on-failure: ABORT\n    commands:\n      - |\n        set -e\n        set -o pipefail\n\n        if [[ $REQUESTED_ACTION == 'Delete' ]]; then\n          echo \"Requested Action: Delete\"\n          aws eks update-kubeconfig --name ${MIGRATION_CLUSTER_NAME}\n          # Delete all ingress objects\n          kubectl delete ingress --all -n apps\n          ######## HELM RELEASES ########\n          # Get all Helm releases in all namespaces\n          RELEASES=$(helm list --all-namespaces --output json | jq -c '.[]')\n\n          if [ -z \"$RELEASES\" ]; then\n            echo \"No Helm releases found in the cluster.\"\n          else\n            echo \"Uninstalling all Helm releases...\"\n\n            # Loop through each release and uninstall it\n            echo \"$RELEASES\" | while IFS= read -r release; do\n              RELEASE_NAME=$(echo \"$release\" | jq -r '.name')\n              if [ \"$RELEASE_NAME\" != \"karpenter\" ]; then\n                NAMESPACE=$(echo \"$release\" | jq -r '.namespace')\n\n                echo \"Uninstalling release '$RELEASE_NAME' from namespace '$NAMESPACE'...\"\n                helm uninstall \"$RELEASE_NAME\" -n \"$NAMESPACE\"\n              else\n                echo \"Skipping Helm release: $RELEASE_NAME (excluded)\"\n              fi\n            done\n          fi\n          ######## HELM RELEASES ########\n\n          ######## FARGATE PROFILES ########\n          # Get all Fargate profiles in the cluster\n          FARGATE_PROFILES=$(eksctl get fargateprofile --cluster \"$MIGRATION_CLUSTER_NAME\" -o json | jq -r '.[].name')\n\n          if [ -z \"$FARGATE_PROFILES\" ]; then\n            echo \"No Fargate profiles found in the cluster: $MIGRATION_CLUSTER_NAME\"\n          else\n            # Loop through and delete each Fargate profile\n            echo \"Deleting Fargate profiles in cluster: $MIGRATION_CLUSTER_NAME\"\n            for PROFILE in $FARGATE_PROFILES; do\n              echo \"Deleting Fargate profile: $PROFILE\"\n              eksctl delete fargateprofile --cluster \"$MIGRATION_CLUSTER_NAME\" --name \"$PROFILE\" --wait\n            done\n            echo \"All Fargate profiles have been deleted.\"\n          fi\n          ######## FARGATE PROFILES ########\n\n          ######## MANAGED NODE GROUPS ########\n          # Get all managed node groups in the cluster\n          MANAGED_NODE_GROUPS=$(eksctl get nodegroup --cluster \"$MIGRATION_CLUSTER_NAME\" -o json | jq -r '.[] | select(.Type == \"managed\") | .Name')\n\n          if [ -z \"$MANAGED_NODE_GROUPS\" ]; then\n            echo \"No managed node groups found in the cluster: $MIGRATION_CLUSTER_NAME\"\n          else\n            echo \"Deleting managed node groups in cluster: $MIGRATION_CLUSTER_NAME\"\n            # Loop through and delete each managed node group\n            echo \"$MANAGED_NODE_GROUPS\" | while IFS= read -r nodegroup; do\n              echo \"Deleting managed node group: $nodegroup\"\n              eksctl delete nodegroup --cluster \"$MIGRATION_CLUSTER_NAME\" --name \"$nodegroup\" --region \"$REGION\" --disable-eviction --parallel 25 --wait\n            done\n            echo \"All managed node groups have been deleted.\"\n          fi\n          ######## MANAGED NODE GROUPS ########\n          ######## KARPENTER ########\n          kubectl delete nodeclaim --all --wait=true --timeout=10m\n          helm uninstall karpenter -n ${KARPENTER_NAMESPACE} --wait --timeout=10m || true\n          ######## KARPENTER ########\n          # remove orphaned ENIs\n          aws ec2 describe-network-interfaces \\\n            --filters \"Name=tag:cluster.k8s.amazonaws.com/name,Values=${MIGRATION_CLUSTER_NAME}\" \"Name=status,Values=available\" \\\n            --query 'NetworkInterfaces[*].NetworkInterfaceId' \\\n            --output text | tr '\\t' '\\n' | \\\n          while read -r eni; do\n            if [ ! -z \"$eni\" ]; then\n              echo \"Deleting network interface: $eni\"\n              aws ec2 delete-network-interface --network-interface-id \"$eni\"\n            fi\n          done\n          eksctl delete cluster --name \"$MIGRATION_CLUSTER_NAME\" --region \"$AWS_REGION\" --wait\n          POLICY_NAME=\"AWSLoadBalancerControllerIAMPolicy\"\n          # Check if the policy already exists\n          POLICY_ARN=$(aws iam list-policies --scope Local --query \"Policies[?PolicyName=='$POLICY_NAME'].Arn\" --output text)\n          aws iam delete-policy --policy-arn $POLICY_ARN || true\n          # Delete Karpenter instance profiles\n          KARPENTER_NODE_ROLE=KarpenterNodeRole-${MIGRATION_CLUSTER_NAME}\n          KARPENTER_INSTANCE_PROFILES=$(aws iam list-instance-profiles-for-role --role-name ${KARPENTER_NODE_ROLE} --query 'InstanceProfiles[*].InstanceProfileName' --output text || true)\n          for profile in $KARPENTER_INSTANCE_PROFILES; do\n            echo \"Removing role from instance profile $profile\"\n            aws iam remove-role-from-instance-profile --instance-profile-name \"$profile\" --role-name ${KARPENTER_NODE_ROLE}\n            echo \"Deleting instance profile $profile\"\n            aws iam delete-instance-profile --instance-profile-name \"$profile\"\n          done\n\n          aws cloudformation delete-stack --stack-name \"Karpenter-${MIGRATION_CLUSTER_NAME}\" --region $AWS_REGION || true\n          aws cloudformation wait stack-delete-complete --stack-name \"Karpenter-${MIGRATION_CLUSTER_NAME}\" --region $AWS_REGION || true\n\n        else\n          echo \"Requested Action: ${REQUESTED_ACTION}\"\n\n          # Karpenter installation\n          TEMPOUT=$CODEBUILD_SRC_DIR/tmp-karpenter\n          touch $TEMPOUT\n\n          # for local testing --> run create cluster command only if cluster doesn't exists\n          if ! aws eks describe-cluster --name ${MIGRATION_CLUSTER_NAME} >/dev/null 2>&1; then\n\n            # required resources for Karpenter\n            curl -fsSL https://raw.githubusercontent.com/aws/karpenter-provider-aws/v\"${KARPENTER_VERSION}\"/website/content/en/preview/getting-started/getting-started-with-karpenter/cloudformation.yaml  > \"${TEMPOUT}\" \\\n            && aws cloudformation deploy \\\n              --stack-name \"Karpenter-${MIGRATION_CLUSTER_NAME}\" \\\n              --template-file \"${TEMPOUT}\" \\\n              --capabilities CAPABILITY_NAMED_IAM \\\n              --parameter-overrides \"ClusterName=${MIGRATION_CLUSTER_NAME}\"\n\n            curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json\n            POLICY_NAME=\"AWSLoadBalancerControllerIAMPolicy\"\n\n            # Check if the policy already exists\n            POLICY_ARN=$(aws iam list-policies --scope Local --query \"Policies[?PolicyName=='$POLICY_NAME'].Arn\" --output text)\n            if [ -z \"$POLICY_ARN\" ]; then\n                echo \"Policy does not exist. Creating policy...\"\n                POLICY_ARN=$(aws iam create-policy \\\n                    --policy-name \"$POLICY_NAME\" \\\n                    --policy-document file://iam-policy.json \\\n                    --query \"Policy.Arn\" --output text)\n                echo \"Policy created: $POLICY_ARN\"\n            else\n                echo \"Policy already exists: $POLICY_ARN\"\n            fi\n\n            # Create EKS Cluster for the migration module\n            cat <<EOF| eksctl create cluster -f -\n            apiVersion: eksctl.io/v1alpha5\n            kind: ClusterConfig\n            metadata:\n              name: ${MIGRATION_CLUSTER_NAME}\n              region: ${AWS_REGION}\n              version: \"${KUBERNETES_VERSION}\"\n              tags:\n                karpenter.sh/discovery: ${MIGRATION_CLUSTER_NAME}\n                provisioned-by: eks-automode-workshop\n            availabilityZones:\n        $(aws ec2 describe-availability-zones \\\n              --region ${AWS_REGION} \\\n              --filters \"Name=opt-in-status,Values=opt-in-not-required\" \\\n              --query \"AvailabilityZones[?ZoneId!='use1-az3'].[ZoneName][:3]\" \\\n              --output text | sed 's/ /, /g; s/^/      - /')\n            iam:\n              withOIDC: true\n              serviceRoleARN: ${CLUSTER_ROLE}\n              podIdentityAssociations:\n              - namespace: \"${KARPENTER_NAMESPACE}\"\n                serviceAccountName: karpenter\n                roleName: ${MIGRATION_CLUSTER_NAME}-karpenter\n                permissionPolicyARNs:\n                - arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerPolicy-${MIGRATION_CLUSTER_NAME}\n              - namespace: kube-system\n                serviceAccountName: aws-load-balancer-controller\n                roleName: AWSLoadBalancerControllerIAMRole\n                permissionPolicyARNs:\n                - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy\n            accessConfig:\n              authenticationMode: API_AND_CONFIG_MAP\n              accessEntries:\n                - principalARN: \"arn:aws:iam::${AWS_ACCOUNT_ID}:role/KarpenterNodeRole-${MIGRATION_CLUSTER_NAME}\"\n                  type: EC2_LINUX\n            managedNodeGroups:\n              - name: system-mng\n                instanceType: m6g.large\n                privateNetworking: true\n                desiredCapacity: 3\n                minSize: 0\n                maxSize: 3\n                labels:\n                  role: system-mng\n                taints:\n                  - key: CriticalAddonsOnly\n                    effect: NoSchedule\n                tags:\n                  provisioned-by: eks-automode-workshop\n              - name: apps-mng\n                instanceType: m5.large\n                privateNetworking: true\n                desiredCapacity: 3\n                minSize: 0\n                maxSize: 3\n                labels:\n                  role: apps-mng\n                taints:\n                  - key: role\n                    value: apps-mng\n                    effect: NoSchedule\n                tags:\n                  provisioned-by: eks-automode-workshop\n            cloudWatch:\n              clusterLogging:\n                enableTypes: [\"*\"]\n            addons:\n            - name: coredns\n              configurationValues: |-\n                nodeSelector:\n                  role: system-mng\n            - name: eks-pod-identity-agent\n            - name: aws-ebs-csi-driver\n        EOF\n\n          for i in {1..20}; do\n              echo \"Creating Fargate Profile: apps (attempt $i/20)\"\n              if aws eks create-fargate-profile \\\n                  --cluster-name ${MIGRATION_CLUSTER_NAME} \\\n                  --fargate-profile-name apps \\\n                  --pod-execution-role-arn ${FARGATE_ROLE} \\\n                  --selectors namespace=apps,labels='{app.kubernetes.io/component=service,app.kubernetes.io/name=orders}' \\\n                  --tags provisioned-by=eks-automode-workshop; then\n                  echo \"Fargate profile created successfully!\"\n                  break\n              elif [ $i -eq 20 ]; then\n                  echo \"Failed to create Fargate profile after 20 attempts. Aborting.\"\n                  exit 1\n              else\n                  echo \"Attempt $i failed, retrying in 60 seconds...\"\n                  sleep 60\n              fi\n          done\n\n          echo \"Waiting for Fargate Profile apps to be ACTIVE\"\n          aws eks wait fargate-profile-active --cluster-name ${MIGRATION_CLUSTER_NAME} --fargate-profile-name apps\n          aws eks describe-fargate-profile --cluster-name ${MIGRATION_CLUSTER_NAME} --fargate-profile-name apps\n          echo \"Fargate Profile apps is ACTIVE\"\n\n          fi\n\n          aws eks update-kubeconfig --name ${MIGRATION_CLUSTER_NAME}\n\n          echo \"aws sts get-caller-identity\"\n          aws sts get-caller-identity\n\n          echo \"kubectl get pods -A\"\n          kubectl get pods -A\n\n          # EKS Charts\n          echo \"1 - helm repo registry logout\"\n          helm registry logout public.ecr.aws || true\n          echo \"helm repo add\"\n          helm repo add eks https://aws.github.io/eks-charts\n          echo \"helm repo update\"\n          helm repo update\n          echo \"2 - helm repo registry logout\"\n          helm registry logout public.ecr.aws || true\n\n          # install Karpenter\n          export CLUSTER_ENDPOINT=\"$(aws eks describe-cluster --name \"${MIGRATION_CLUSTER_NAME}\" --query \"cluster.endpoint\" --output text)\"\n          export KARPENTER_IAM_ROLE_ARN=\"arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/${MIGRATION_CLUSTER_NAME}-karpenter\"\n          echo \"vars:\" $CLUSTER_ENDPOINT \" and \" $KARPENTER_IAM_ROLE_ARN\n\n          echo \"helm upgrade -i karpenter\"\n          helm upgrade -i karpenter oci://public.ecr.aws/karpenter/karpenter --version \"${KARPENTER_VERSION}\" --namespace \"${KARPENTER_NAMESPACE}\" --create-namespace \\\n            --set \"settings.clusterName=${MIGRATION_CLUSTER_NAME}\" \\\n            --set \"settings.interruptionQueue=${MIGRATION_CLUSTER_NAME}\" \\\n            --set controller.resources.requests.cpu=1 \\\n            --set controller.resources.requests.memory=1Gi \\\n            --set controller.resources.limits.cpu=1 \\\n            --set controller.resources.limits.memory=1Gi \\\n            --wait\n\n          VPC_ID=$(aws ec2 describe-vpcs --filters \"Name=tag:Name,Values=eksctl-${MIGRATION_CLUSTER_NAME}-cluster/VPC\" --query \"Vpcs[*].VpcId\" --output text)\n          # install AWS LBC\n          cat <<EOF > lbc-values.yaml\n          vpcId: ${VPC_ID}\n          region: ${AWS_REGION}\n          clusterName: ${MIGRATION_CLUSTER_NAME}\n          serviceAccount:\n            create: true\n            name: aws-load-balancer-controller\n          nodeSelector:\n            role: system-mng\n          tolerations:\n            - key: CriticalAddonsOnly\n              operator: Exists\n          resources:\n            limits:\n              cpu: 100m\n              memory: 128Mi\n            requests:\n              cpu: 100m\n              memory: 128Mi\n        EOF\n\n          wget https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml\n          kubectl apply -f crds.yaml\n\n          echo \"helm upgrade -i lbc\"\n          helm upgrade -i aws-load-balancer-controller eks/aws-load-balancer-controller \\\n            --namespace kube-system \\\n            --wait \\\n            --values lbc-values.yaml\n\n          # self-managed karpenter ec2nodeclass\n          cat <<EOF| kubectl apply -f -\n          apiVersion: karpenter.k8s.aws/v1\n          kind: EC2NodeClass\n          metadata:\n            name: apps\n          spec:\n            amiSelectorTerms:\n              - alias: al2023@latest\n            role: KarpenterNodeRole-${MIGRATION_CLUSTER_NAME}\n            subnetSelectorTerms:\n              - tags:\n                  karpenter.sh/discovery: ${MIGRATION_CLUSTER_NAME}\n                  Name: \"*/SubnetPrivate*\"\n            securityGroupSelectorTerms:\n              - tags:\n                  # ensure that the cluster SG is used, as AWS LBC is looking for this tag key\n                  # see https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v2.11.0/pkg/targetgroupbinding/networking_manager.go#L552\n                  kubernetes.io/cluster/${MIGRATION_CLUSTER_NAME}: owned\n            tags:\n              provisioned-by: eks-automode-workshop\n        EOF\n          # self-managed karpenter nodepool\n          cat <<EOF| kubectl apply -f -\n          apiVersion: karpenter.sh/v1\n          kind: NodePool\n          metadata:\n            name: apps\n          spec:\n            disruption:\n              consolidationPolicy: WhenEmptyOrUnderutilized\n              consolidateAfter: 30s\n            template:\n              metadata:\n                labels:\n                  role: apps-karpenter\n              spec:\n                nodeClassRef:\n                  group: karpenter.k8s.aws\n                  kind: EC2NodeClass\n                  name: apps\n                taints:\n                  - key: role\n                    value: apps-karpenter\n                    effect: NoSchedule\n                requirements:\n                  - key: kubernetes.io/arch\n                    operator: In\n                    values: [amd64, arm64]\n                  - key: kubernetes.io/os\n                    operator: In\n                    values: [linux]\n                  - key: karpenter.sh/capacity-type\n                    operator: In\n                    values: [on-demand]\n                  - key: node.kubernetes.io/instance-category\n                    operator: In\n                    values: [c, m, r]\n                  - key: karpenter.k8s.aws/instance-generation\n                    operator: Gt\n                    values: ['4']\n                  - key: karpenter.k8s.aws/instance-size\n                    operator: NotIn\n                    values: [nano, micro, small, medium]\n        EOF\n\n          # Create default gp3 SC\n          cat << EOF > $CODEBUILD_SRC_DIR/storage-class.yml\n          kind: StorageClass\n          apiVersion: storage.k8s.io/v1\n          metadata:\n            name: gp3\n            annotations:\n              storageclass.kubernetes.io/is-default-class: 'true'\n          provisioner: ebs.csi.aws.com\n          allowVolumeExpansion: true\n          reclaimPolicy: Retain\n          volumeBindingMode: WaitForFirstConsumer\n          parameters:\n            type: gp3\n            fsType: ext4\n        EOF\n\n          kubectl apply -f $CODEBUILD_SRC_DIR/storage-class.yml\n\n          # Create the apps Namespace\n          kubectl create namespace apps\n\n          # Install orders --> AppsMNG\n          cat <<EOF> $CODEBUILD_SRC_DIR/orders-values.yaml\n          replicaCount: 3\n\n          topologySpreadConstraints:\n            - maxSkew: 1\n              minDomains: 3\n              topologyKey: topology.kubernetes.io/zone\n              whenUnsatisfiable: DoNotSchedule\n              labelSelector:\n                matchLabels:\n                  app.kubernetes.io/instance: retail-store-app-orders\n        EOF\n\n          helm upgrade -i retail-store-app-orders oci://public.ecr.aws/aws-containers/retail-store-sample-orders-chart \\\n          --version ${RETAIL_STORE_APP_HELM_CHART_VERSION} \\\n          --namespace apps \\\n          --values $CODEBUILD_SRC_DIR/orders-values.yaml\n\n          # Install catalog --> AppsMNG\n          cat <<EOF> $CODEBUILD_SRC_DIR/catalog-values.yaml\n          replicaCount: 3\n          nodeSelector:\n            role: apps-mng\n          tolerations:\n            - key: role\n              value: apps-mng\n              operator: Equal\n              effect: NoSchedule\n\n          app:\n            persistence:\n              provider: mysql\n              endpoint: \"\"\n              database: \"catalog\"\n\n              secret:\n                create: true\n                name: catalog-db\n                username: catalog\n                password: \"mysqlcatalog123\" # Password has to match the content in the migration module for the catalog service\n\n          topologySpreadConstraints:\n            - maxSkew: 1\n              minDomains: 3\n              topologyKey: topology.kubernetes.io/zone\n              whenUnsatisfiable: DoNotSchedule\n              labelSelector:\n                matchLabels:\n                  app.kubernetes.io/instance: retail-store-app-catalog\n\n          mysql:\n            create: true\n            nodeSelector:\n              role: apps-mng\n            tolerations:\n              - key: role\n                value: apps-mng\n                operator: Equal\n                effect: NoSchedule\n            persistentVolume:\n              enabled: true\n              accessModes:\n                - ReadWriteOnce\n              size: 10Gi\n              storageClass: \"gp3\"\n        EOF\n\n          helm upgrade -i retail-store-app-catalog oci://public.ecr.aws/aws-containers/retail-store-sample-catalog-chart \\\n            --version ${RETAIL_STORE_APP_HELM_CHART_VERSION} \\\n            --namespace apps \\\n            --values $CODEBUILD_SRC_DIR/catalog-values.yaml\n\n          # Install Checkout --> self-managed karpenter\n          cat <<EOF> $CODEBUILD_SRC_DIR/checkout-values.yaml\n          replicaCount: 3\n          nodeSelector:\n            role: apps-karpenter\n          tolerations:\n            - key: role\n              value: apps-karpenter\n              operator: Equal\n              effect: NoSchedule\n          topologySpreadConstraints:\n            - maxSkew: 1\n              minDomains: 3\n              topologyKey: topology.kubernetes.io/zone\n              whenUnsatisfiable: DoNotSchedule\n              labelSelector:\n                matchLabels:\n                  app.kubernetes.io/instance: retail-store-app-checkout\n\n          redis:\n            nodeSelector:\n              role: apps-karpenter\n            tolerations:\n              - key: role\n                value: apps-karpenter\n                operator: Equal\n                effect: NoSchedule\n        EOF\n\n          helm upgrade -i retail-store-app-checkout oci://public.ecr.aws/aws-containers/retail-store-sample-checkout-chart \\\n            --version ${RETAIL_STORE_APP_HELM_CHART_VERSION} \\\n            --namespace apps \\\n            --values $CODEBUILD_SRC_DIR/checkout-values.yaml\n\n          # Install carts --> self-managed karpenter\n          cat <<EOF> $CODEBUILD_SRC_DIR/carts-values.yaml\n          replicaCount: 3\n          nodeSelector:\n            role: apps-karpenter\n          tolerations:\n            - key: role\n              value: apps-karpenter\n              operator: Equal\n              effect: NoSchedule\n\n          topologySpreadConstraints:\n            - maxSkew: 1\n              minDomains: 3\n              topologyKey: topology.kubernetes.io/zone\n              whenUnsatisfiable: DoNotSchedule\n              labelSelector:\n                matchLabels:\n                  app.kubernetes.io/instance: retail-store-app-carts\n        EOF\n\n          helm upgrade -i retail-store-app-carts oci://public.ecr.aws/aws-containers/retail-store-sample-cart-chart \\\n            --version ${RETAIL_STORE_APP_HELM_CHART_VERSION} \\\n            --namespace apps \\\n            --values $CODEBUILD_SRC_DIR/carts-values.yaml\n\n          # Install UI --> self-managed karpenter\n          cat <<EOF> $CODEBUILD_SRC_DIR/ui-values.yaml\n          replicaCount: 3\n          nodeSelector:\n            role: apps-karpenter\n          tolerations:\n            - key: role\n              value: apps-karpenter\n              operator: Equal\n              effect: NoSchedule\n          app:\n            theme: default\n            endpoints:\n              catalog: http://retail-store-app-catalog:80\n              carts: http://retail-store-app-carts:80\n              checkout: http://retail-store-app-checkout:80\n              orders: http://retail-store-app-orders:80\n          autoscaling:\n            enabled: true\n            minReplicas: 3\n            maxReplicas: 10\n            targetCPUUtilizationPercentage: 80\n          topologySpreadConstraints:\n            - maxSkew: 1\n              minDomains: 3\n              topologyKey: topology.kubernetes.io/zone\n              whenUnsatisfiable: DoNotSchedule\n              labelSelector:\n                matchLabels:\n                  app.kubernetes.io/instance: retail-store-app-ui\n          ingresses:\n            - enabled: true\n              className: alb\n              name: main\n              annotations:\n                alb.ingress.kubernetes.io/scheme: internet-facing\n                alb.ingress.kubernetes.io/target-type: ip\n        EOF\n\n          helm upgrade -i retail-store-app-ui oci://public.ecr.aws/aws-containers/retail-store-sample-ui-chart \\\n            --version ${RETAIL_STORE_APP_HELM_CHART_VERSION} \\\n            --namespace apps \\\n            --values $CODEBUILD_SRC_DIR/ui-values.yaml\n\n        fi\n\n        eksctl get clusters\n",
+     "Type": "NO_SOURCE"
+    },
+    "TimeoutInMinutes": 60
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codebuild:StartBuild",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "Roles": [
+     {
+      "Ref": "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+     }
+    ]
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "// This function is based on the cfnresponse JS module that is published\n// by CloudFormation. It's an async function that makes coding much easier.\nconst respond = async function(event, context, responseStatus, responseData, physicalResourceId, noEcho) {\n  return new Promise((resolve, reject) => {\n    var responseBody = JSON.stringify({\n        Status: responseStatus,\n        Reason: \"See the details in CloudWatch Log Stream: \" + context.logGroupName + \" \" + context.logStreamName,\n        PhysicalResourceId: physicalResourceId || context.logStreamName,\n        StackId: event.StackId,\n        RequestId: event.RequestId,\n        LogicalResourceId: event.LogicalResourceId,\n        NoEcho: noEcho || false,\n        Data: responseData\n    });\n\n    console.log(\"Response body:\\\\n\", responseBody);\n\n    var https = require(\"https\");\n    var url = require(\"url\");\n\n    var parsedUrl = url.parse(event.ResponseURL);\n    var options = {\n        hostname: parsedUrl.hostname,\n        port: 443,\n        path: parsedUrl.path,\n        method: \"PUT\",\n        headers: {\n            \"content-type\": \"\",\n            \"content-length\": responseBody.length\n        }\n    };\n\n    var request = https.request(options, function(response) {\n        console.log(\"Status code: \" + response.statusCode);\n        console.log(\"Status message: \" + response.statusMessage);\n        resolve();\n    });\n\n    request.on(\"error\", function(error) {\n        console.log(\"respond(..) failed executing https.request(..): \" + error);\n        resolve();\n    });\n\n    request.write(responseBody);\n    request.end();\n  });\n};\nconst AWS = require('aws-sdk');\n\nexports.handler = async function (event, context) {\n  console.log(JSON.stringify(event, null, 4));\n  try {\n    const projectName = event.ResourceProperties.ProjectName;\n    const codeBuildIamRoleArn = event.ResourceProperties.CodeBuildIamRoleArn\n\n    const codebuild = new AWS.CodeBuild();\n\n    console.log(`Starting new build of project ${projectName}`);\n\n    const { build } = await codebuild.startBuild({\n      projectName,\n      // Pass CFN related parameters through the build for extraction by the\n      // completion handler.\n      environmentVariablesOverride: [\n        {\n          name: 'CFN_RESPONSE_URL',\n          value: event.ResponseURL\n        },\n        {\n          name: 'CFN_STACK_ID',\n          value: event.StackId\n        },\n        {\n          name: 'CFN_REQUEST_ID',\n          value: event.RequestId\n        },\n        {\n          name: 'CFN_LOGICAL_RESOURCE_ID',\n          value: event.LogicalResourceId\n        },\n        {\n          name: 'REQUESTED_ACTION',\n          value: event.RequestType\n        },\n        {\n          name: 'RESOURCE_CODEBUILD_ROLE_ARN',\n          value: codeBuildIamRoleArn\n        }\n      ]\n    }).promise();\n    console.log(`Build id ${build.id} started - resource completion handled by EventBridge`);\n  } catch(error) {\n    console.error(error);\n    await respond(event, context, 'FAILED', { Error: error });\n  }\n};\n"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs16.x",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F",
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:ListBuildsForProject"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "Roles": [
+     {
+      "Ref": "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB"
+     }
+    ]
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "// This function is based on the cfnresponse JS module that is published\n// by CloudFormation. It's an async function that makes coding much easier.\nconst respond = async function(event, context, responseStatus, responseData, physicalResourceId, noEcho) {\n  return new Promise((resolve, reject) => {\n    var responseBody = JSON.stringify({\n        Status: responseStatus,\n        Reason: \"See the details in CloudWatch Log Stream: \" + context.logGroupName + \" \" + context.logStreamName,\n        PhysicalResourceId: physicalResourceId || context.logStreamName,\n        StackId: event.StackId,\n        RequestId: event.RequestId,\n        LogicalResourceId: event.LogicalResourceId,\n        NoEcho: noEcho || false,\n        Data: responseData\n    });\n\n    console.log(\"Response body:\\\\n\", responseBody);\n\n    var https = require(\"https\");\n    var url = require(\"url\");\n\n    var parsedUrl = url.parse(event.ResponseURL);\n    var options = {\n        hostname: parsedUrl.hostname,\n        port: 443,\n        path: parsedUrl.path,\n        method: \"PUT\",\n        headers: {\n            \"content-type\": \"\",\n            \"content-length\": responseBody.length\n        }\n    };\n\n    var request = https.request(options, function(response) {\n        console.log(\"Status code: \" + response.statusCode);\n        console.log(\"Status message: \" + response.statusMessage);\n        resolve();\n    });\n\n    request.on(\"error\", function(error) {\n        console.log(\"respond(..) failed executing https.request(..): \" + error);\n        resolve();\n    });\n\n    request.write(responseBody);\n    request.end();\n  });\n};\nconst AWS = require('aws-sdk');\n\nexports.handler = async function (event, context) {\n  console.log(JSON.stringify(event, null, 4));\n\n  const projectName = event['detail']['project-name'];\n\n  const codebuild = new AWS.CodeBuild();\n\n  const buildId = event['detail']['build-id'];\n  const { builds } = await codebuild.batchGetBuilds({\n    ids: [ buildId ]\n  }).promise();\n\n  console.log(JSON.stringify(builds, null, 4));\n\n  const build = builds[0];\n  // Fetch the CFN resource and response parameters from the build environment.\n  const environment = {};\n  build.environment.environmentVariables.forEach(e => environment[e.name] = e.value);\n\n  const response = {\n    ResponseURL: environment.CFN_RESPONSE_URL,\n    StackId: environment.CFN_STACK_ID,\n    LogicalResourceId: environment.CFN_LOGICAL_RESOURCE_ID,\n    RequestId: environment.CFN_REQUEST_ID\n  };\n\n  if (event['detail']['build-status'] === 'SUCCEEDED') {\n    await respond(response, context, 'SUCCESS', {}, 'build');\n  } else {\n    await respond(response, context, 'FAILED', { Error: 'Build failed' });\n  }\n};\n"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs16.x",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Build complete",
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "build-status": [
+       "SUCCEEDED",
+       "FAILED",
+       "STOPPED"
+      ],
+      "project-name": [
+       {
+        "Ref": "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991"
+       }
+      ]
+     }
+    },
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+        "Arn"
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ]
+  },
+  "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9": {
+   "Type": "AWS::CloudFormation::CustomResource",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+      "Arn"
+     ]
+    },
+    "ProjectName": {
+     "Ref": "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991"
+    },
+    "CodeBuildIamRoleArn": {
+     "Fn::GetAtt": [
+      "SharedRoleD1D02F7E",
+      "Arn"
+     ]
+    },
+    "ContentHash": "54236768d8ef480588fc51be1f63f4f1"
+   },
+   "DependsOn": [
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "MigrationClusterNodeRole8F3A3E1F",
+    "MigrationClusterRole5195CA93"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "participantAccessEntryCluster17E1CFAE2": {
+   "Type": "AWS::EKS::AccessEntry",
+   "Properties": {
+    "AccessPolicies": [
+     {
+      "AccessScope": {
+       "Type": "cluster"
+      },
+      "PolicyArn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:",
+         {
+          "Ref": "AWS::Partition"
+         },
+         ":eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+        ]
+       ]
+      }
+     }
+    ],
+    "ClusterName": {
+     "Ref": "EksClusterName"
+    },
+    "PrincipalArn": {
+     "Ref": "ParticipantRoleArn"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C"
+   ]
+  },
+  "participantAccessEntryCluster20294B9B9": {
+   "Type": "AWS::EKS::AccessEntry",
+   "Properties": {
+    "AccessPolicies": [
+     {
+      "AccessScope": {
+       "Type": "cluster"
+      },
+      "PolicyArn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:",
+         {
+          "Ref": "AWS::Partition"
+         },
+         ":eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+        ]
+       ]
+      }
+     }
+    ],
+    "ClusterName": {
+     "Ref": "EksClusterNameForMigrations"
+    },
+    "PrincipalArn": {
+     "Ref": "ParticipantRoleArn"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPC2F8A1FC2": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "192.168.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "eks-automode-workshop/EksAmWsAutoIDE/IdeVPC"
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPCPublicSubnet1SubnetF9AC9328": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Sub": [
+      "${Region}b",
+      {
+       "Region": {
+        "Ref": "AWS::Region"
+       }
+      }
+     ]
+    },
+    "CidrBlock": "192.168.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "eks-automode-workshop/EksAmWsAutoIDE/IdeVPC/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "EksAmWsAutoIDEIdeVPC2F8A1FC2"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableE47E48D1": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "eks-automode-workshop/EksAmWsAutoIDE/IdeVPC/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "EksAmWsAutoIDEIdeVPC2F8A1FC2"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableAssociationF5587134": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableE47E48D1"
+    },
+    "SubnetId": {
+     "Ref": "EksAmWsAutoIDEIdeVPCPublicSubnet1SubnetF9AC9328"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPCPublicSubnet1DefaultRouteBCE44862": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "EksAmWsAutoIDEIdeVPCIGW2DFE943B"
+    },
+    "RouteTableId": {
+     "Ref": "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableE47E48D1"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEIdeVPCVPCGWB3F868C4",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPCIGW2DFE943B": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "eks-automode-workshop/EksAmWsAutoIDE/IdeVPC"
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeVPCVPCGWB3F868C4": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "EksAmWsAutoIDEIdeVPCIGW2DFE943B"
+    },
+    "VpcId": {
+     "Ref": "EksAmWsAutoIDEIdeVPC2F8A1FC2"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleC6C5341C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleDefaultPolicy31DEB9DA": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "ec2:DescribeManagedPrefixLists",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleDefaultPolicy31DEB9DA",
+    "Roles": [
+     {
+      "Ref": "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleC6C5341C"
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePrefixListFunction570CCA4B": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "from __future__ import print_function\nimport boto3\nimport traceback\nimport cfnresponse\n\ndef lambda_handler(event, context):\n    print('Event: {}'.format(event))\n    print('context: {}'.format(context))\n    responseData = {}\n\n    status = cfnresponse.SUCCESS\n\n    if event['RequestType'] == 'Delete':\n        responseData = {'Success': 'Custom Resource removed'}\n        cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')\n    else:\n        try:\n            # Open AWS clients\n            ec2 = boto3.client('ec2')\n\n            res = ec2.describe_managed_prefix_lists(\n               Filters=[{\n                  'Name': 'prefix-list-name',\n                  'Values': ['com.amazonaws.global.cloudfront.origin-facing']\n               }]\n            )\n\n            responseData = {'PrefixListId': str(res['PrefixLists'][0]['PrefixListId'])}\n        except Exception as e:\n            status = cfnresponse.FAILED\n            tb_err = traceback.format_exc()\n            print(tb_err)\n            responseData = {'Error': tb_err}\n        finally:\n            cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')"
+    },
+    "Handler": "index.lambda_handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleC6C5341C",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 180
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleDefaultPolicy31DEB9DA",
+    "EksAmWsAutoIDEIdePrefixListFunctionServiceRoleC6C5341C",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePrefixListResource1CF39EFF": {
+   "Type": "AWS::CloudFormation::CustomResource",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdePrefixListFunction570CCA4B",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "EksAmWsAutoIDEIdeSecurityGroupD6132976": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "IDE security group",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "EksAmWsAutoIDEIdeVPC2F8A1FC2"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeSecurityGroupfromIndirectPeer80FBB5CC74": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "HTTP from CloudFront only",
+    "FromPort": 80,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdeSecurityGroupD6132976",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourcePrefixListId": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdePrefixListResource1CF39EFF",
+      "PrefixListId"
+     ]
+    },
+    "ToPort": 80
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEInstanceProfile1C032882": {
+   "Type": "AWS::IAM::InstanceProfile",
+   "Properties": {
+    "Roles": [
+     {
+      "Ref": "SharedRoleD1D02F7E"
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEIdeVPCIGW2DFE943B",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1DefaultRouteBCE44862",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableE47E48D1",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableAssociationF5587134",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1SubnetF9AC9328",
+    "EksAmWsAutoIDEIdeVPC2F8A1FC2",
+    "EksAmWsAutoIDEIdeVPCVPCGWB3F868C4",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDE42A875CF641a0cee2d30d2eb": {
+   "Type": "AWS::EC2::Instance",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Sub": [
+      "${Region}b",
+      {
+       "Region": {
+        "Ref": "AWS::Region"
+       }
+      }
+     ]
+    },
+    "BlockDeviceMappings": [
+     {
+      "DeviceName": "/dev/xvda",
+      "Ebs": {
+       "DeleteOnTermination": true,
+       "Encrypted": true,
+       "VolumeSize": 30,
+       "VolumeType": "gp3"
+      }
+     }
+    ],
+    "IamInstanceProfile": {
+     "Ref": "EksAmWsAutoIDEInstanceProfile1C032882"
+    },
+    "ImageId": {
+     "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "InstanceType": "t3.medium",
+    "NetworkInterfaces": [
+     {
+      "AssociatePublicIpAddress": true,
+      "DeviceIndex": "0",
+      "GroupSet": [
+       {
+        "Fn::GetAtt": [
+         "EksAmWsAutoIDEIdeSecurityGroupD6132976",
+         "GroupId"
+        ]
+       }
+      ],
+      "SubnetId": {
+       "Ref": "EksAmWsAutoIDEIdeVPCPublicSubnet1SubnetF9AC9328"
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "eks-automode-workshop/EksAmWsAutoIDE/EksAmWsAutoIDE"
+     }
+    ],
+    "UserData": {
+     "Fn::Base64": "#!/bin/bash"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEIdeVPCIGW2DFE943B",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1DefaultRouteBCE44862",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableE47E48D1",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1RouteTableAssociationF5587134",
+    "EksAmWsAutoIDEIdeVPCPublicSubnet1SubnetF9AC9328",
+    "EksAmWsAutoIDEIdeVPC2F8A1FC2",
+    "EksAmWsAutoIDEIdeVPCVPCGWB3F868C4",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F",
+    "SharedRoleDefaultPolicyA7803C87",
+    "SharedRoleD1D02F7E"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleEC312C12": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleDefaultPolicy1C6A9BB4": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "SharedRoleD1D02F7E",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "ec2:DescribeInstances",
+        "iam:ListInstanceProfiles",
+        "ssm:DescribeInstanceInformation",
+        "ssm:GetCommandInvocation",
+        "ssm:SendCommand"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleDefaultPolicy1C6A9BB4",
+    "Roles": [
+     {
+      "Ref": "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleEC312C12"
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapFunction914F42EB": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "from __future__ import print_function\nimport boto3\nimport json\nimport os\nimport time\nimport traceback\nimport cfnresponse\nfrom botocore.exceptions import WaiterError\n\ndef lambda_handler(event, context):\n    print('Event: {}'.format(event))\n    print('context: {}'.format(context))\n    responseData = {}\n\n    status = cfnresponse.SUCCESS\n\n    if event['RequestType'] == 'Delete':\n        responseData = {'Success': 'Custom Resource removed'}\n        cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')\n    else:\n        try:\n            # Open AWS clients\n            ec2 = boto3.client('ec2')\n            ssm = boto3.client('ssm')\n\n            instance_id = event['ResourceProperties']['InstanceId']\n\n            print('Waiting for the instance to be ready...')\n            # Wait for Instance to become ready\n            instance_state = 'unknown'\n            print('Instance is currently in state'.format(instance_state))\n            while instance_state != 'running':\n                time.sleep(5)\n                di = ec2.describe_instances(InstanceIds=[instance_id])\n                instance_state = di['Reservations'][0]['Instances'][0]['State']['Name']\n                print('Waiting for instance in state: {}'.format(instance_state))\n\n            print('Instance is ready')\n\n            print('Waiting for instance to come online in SSM...')\n            for i in range(1, 60):\n              response = ssm.describe_instance_information(Filters=[{'Key': 'InstanceIds', 'Values': [instance_id]}])\n              if len(response[\"InstanceInformationList\"]) == 0:\n                print('No instances in SSM')\n              elif len(response[\"InstanceInformationList\"]) > 0 and \\\n                    response[\"InstanceInformationList\"][0][\"PingStatus\"] == \"Online\" and \\\n                    response[\"InstanceInformationList\"][0][\"InstanceId\"] == instance_id:\n                print('Instance is online in SSM')\n                break\n              time.sleep(10)\n\n            ssm_document = event['ResourceProperties']['SsmDocument']\n\n            ssm.send_command(\n                InstanceIds=[instance_id],\n                DocumentName=ssm_document,\n                CloudWatchOutputConfig={\n                    'CloudWatchLogGroupName': event['ResourceProperties']['LogGroupName'],\n                    'CloudWatchOutputEnabled': True\n                })\n\n            responseData = {'Success': 'Started bootstrapping for instance: '+instance_id}\n        except Exception as e:\n            status = cfnresponse.FAILED\n            tb_err = traceback.format_exc()\n            print(tb_err)\n            responseData = {'Error': tb_err}\n        finally:\n            cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')"
+    },
+    "Handler": "index.lambda_handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleEC312C12",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleDefaultPolicy1C6A9BB4",
+    "EksAmWsAutoIDEIdeBootstrapFunctionServiceRoleEC312C12",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeLogGroup870441C6": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 7
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain"
+  },
+  "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {
+     "ExcludeCharacters": "\"@/\\",
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "password",
+     "IncludeSpace": false,
+     "PasswordLength": 32,
+     "SecretStringTemplate": "{\"password\":\"\"}"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "EksAmWsAutoIDEOriginRequestPolicy322CAC28": {
+   "Type": "AWS::CloudFront::OriginRequestPolicy",
+   "Properties": {
+    "OriginRequestPolicyConfig": {
+     "CookiesConfig": {
+      "CookieBehavior": "all"
+     },
+     "HeadersConfig": {
+      "HeaderBehavior": "allViewer"
+     },
+     "Name": "eksautomodeworkshopEksAmWsAutoIDEOriginRequestPolicy78ECF18E",
+     "QueryStringsConfig": {
+      "QueryStringBehavior": "all"
+     }
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeCachePolicy073B7D99": {
+   "Type": "AWS::CloudFront::CachePolicy",
+   "Properties": {
+    "CachePolicyConfig": {
+     "DefaultTTL": 86400,
+     "MaxTTL": 2592000,
+     "MinTTL": 1,
+     "Name": {
+      "Fn::Join": [
+       "",
+       [
+        "eksautomodeworkshopEksAmWsAutoIDEIdeCachePolicy5D3FF86B-",
+        {
+         "Ref": "AWS::Region"
+        }
+       ]
+      ]
+     },
+     "ParametersInCacheKeyAndForwardedToOrigin": {
+      "CookiesConfig": {
+       "CookieBehavior": "all"
+      },
+      "EnableAcceptEncodingBrotli": false,
+      "EnableAcceptEncodingGzip": false,
+      "HeadersConfig": {
+       "HeaderBehavior": "whitelist",
+       "Headers": [
+        "Accept-Charset",
+        "Authorization",
+        "Origin",
+        "Accept",
+        "Referer",
+        "Host",
+        "Accept-Language",
+        "Accept-Encoding",
+        "Accept-Datetime"
+       ]
+      },
+      "QueryStringsConfig": {
+       "QueryStringBehavior": "all"
+      }
+     }
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeDistribution7292718F": {
+   "Type": "AWS::CloudFront::Distribution",
+   "Properties": {
+    "DistributionConfig": {
+     "DefaultCacheBehavior": {
+      "AllowedMethods": [
+       "GET",
+       "HEAD",
+       "OPTIONS",
+       "PUT",
+       "PATCH",
+       "POST",
+       "DELETE"
+      ],
+      "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+      "Compress": true,
+      "OriginRequestPolicyId": {
+       "Ref": "EksAmWsAutoIDEOriginRequestPolicy322CAC28"
+      },
+      "TargetOriginId": "eksautomodeworkshopEksAmWsAutoIDEIdeDistributionOrigin1059E1015",
+      "ViewerProtocolPolicy": "allow-all"
+     },
+     "Enabled": true,
+     "HttpVersion": "http2",
+     "IPV6Enabled": true,
+     "Origins": [
+      {
+       "CustomOriginConfig": {
+        "HTTPPort": 80,
+        "OriginProtocolPolicy": "http-only",
+        "OriginSSLProtocols": [
+         "TLSv1.2"
+        ]
+       },
+       "DomainName": {
+        "Fn::GetAtt": [
+         "EksAmWsAutoIDE42A875CF641a0cee2d30d2eb",
+         "PublicDnsName"
+        ]
+       },
+       "Id": "eksautomodeworkshopEksAmWsAutoIDEIdeDistributionOrigin1059E1015"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapWaitConditionHandleEAF09AC0": {
+   "Type": "AWS::CloudFormation::WaitConditionHandle",
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapWaitCondition687CDFEF": {
+   "Type": "AWS::CloudFormation::WaitCondition",
+   "Properties": {
+    "Count": 1,
+    "Handle": {
+     "Ref": "EksAmWsAutoIDEIdeBootstrapWaitConditionHandleEAF09AC0"
+    },
+    "Timeout": "1800"
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEInstanceProfile1C032882",
+    "EksAmWsAutoIDE42A875CF641a0cee2d30d2eb",
+    "EksAmWsAutoIDEIdeBootstrapDocument96A13CAC",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapDocument96A13CAC": {
+   "Type": "AWS::SSM::Document",
+   "Properties": {
+    "Content": {
+     "schemaVersion": "2.2",
+     "description": "Bootstrap IDE",
+     "parameters": {
+      "BootstrapScript": {
+       "type": "String",
+       "description": "(Optional) Custom bootstrap script to run.",
+       "default": ""
+      }
+     },
+     "mainSteps": [
+      {
+       "action": "aws:runShellScript",
+       "name": "IdeBootstrapFunction",
+       "inputs": {
+        "runCommand": [
+         {
+          "Fn::Sub": [
+           "bash << 'HEREDOC'\nset -e\n\necho \"Retrieving IDE password...\"\n\nPASSWORD_SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id \"${passwordName}\" --query 'SecretString' --output text)\n\nexport IDE_PASSWORD=$(echo \"$PASSWORD_SECRET_VALUE\" | jq -r '.password')\n\necho \"Setting profile variables...\"\n\n# Set some useful variables\nexport TOKEN=$(curl -X PUT \"http://169.254.169.254/latest/api/token\" -H \"X-aws-ec2-metadata-token-ttl-seconds: 21600\")\nexport AWS_REGION=$(curl -H \"X-aws-ec2-metadata-token: $TOKEN\" -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\\\" '{print $4}')\nexport EC2_PRIVATE_IP=$(curl -H \"X-aws-ec2-metadata-token: $TOKEN\" -s http://169.254.169.254/latest/meta-data/local-ipv4)\n\ntee /etc/profile.d/workshop.sh <<EOF\nexport INSTANCE_IAM_ROLE_NAME=\"${instanceIamRoleName}\"\nexport INSTANCE_IAM_ROLE_ARN=\"${instanceIamRoleArn}\"\n\nexport AWS_REGION=\"$AWS_REGION\"\nexport EC2_PRIVATE_IP=\"$EC2_PRIVATE_IP\"\n\nexport IDE_DOMAIN=\"${domain}\"\nexport IDE_URL=\"https://${domain}\"\nexport IDE_PASSWORD=\"$IDE_PASSWORD\"\n\nalias code=\"code-server\"\nEOF\n\nsource /etc/profile.d/workshop.sh\n\necho \"Setting PS1...\"\n\n# Set PS1\ntee /etc/profile.d/custom_prompt.sh <<EOF\n#!/bin/sh\n\nexport PROMPT_COMMAND='export PS1=\"\\u:\\w:$ \"'\nEOF\n\necho \"Generating SSH key...\"\n\n# Generate an SSH key for ec2-user\nsudo -u ec2-user bash -c \"ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -m pem <<< y\"\n\necho \"Installing AWS CLI...\"\n\n# Install AWS CLI\ncurl -LSsf -o /tmp/aws-cli.zip https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip\nunzip -q -d /tmp /tmp/aws-cli.zip\n/tmp/aws/install --update\nrm -rf /tmp/aws\n\necho \"Installing Docker...\"\n\n# Install docker and base package\ndnf install -y -q docker git\nservice docker start\nusermod -aG docker ec2-user\n\necho \"Installing code-server...\"\n\n# Install code-server\ncodeServer=$(dnf list installed code-server | wc -l)\nif [ \"$codeServer\" -eq \"0\" ]; then\n  sudo -u ec2-user \"codeServerVersion=${codeServerVersion}\" bash -c 'curl -fsSL https://code-server.dev/install.sh | sh -s -- --version ${codeServerVersion}'\n  systemctl enable --now code-server@ec2-user\nfi\n\nsudo -u ec2-user bash -c 'mkdir -p ~/.config/code-server'\nsudo -u ec2-user bash -c 'touch ~/.config/code-server/config.yaml'\ntee /home/ec2-user/.config/code-server/config.yaml <<EOF\ncert: false\nauth: password\npassword: \"$IDE_PASSWORD\"\nbind-addr: 127.0.0.1:8889\nEOF\n\n# Create default directory for workspace\nsudo -u ec2-user bash -c 'mkdir -p ~/environment'\n\nENVIRONMENT_CONTENTS_ZIP=${environmentContentsZip}\n\nif [ ! -z \"$ENVIRONMENT_CONTENTS_ZIP\" ]; then\n  echo \"Adding environments archive...\"\n\n  if [[ $ENVIRONMENT_CONTENTS_ZIP == s3:* ]]; then\n    aws s3 cp $ENVIRONMENT_CONTENTS_ZIP /tmp/environment.zip\n  else\n    curl -LSsf -o /tmp/environment.zip $ENVIRONMENT_CONTENTS_ZIP\n  fi\n\n  sudo -u ec2-user bash -c 'unzip -q /tmp/environment.zip -d ~/environment'\n\n  rm -rf /tmp/environment.zip\nfi\n\nSTARTUP_EDITOR='none'\n\nTERMINAL_ON_STARTUP=\"${terminalOnStartup}\"\nREADME_URL=\"${readmeUrl}\"\n\nif [ ! -z \"$README_URL\" ]; then\n  echo \"Adding README...\"\n  if [[ $README_URL == s3:* ]]; then\n    aws s3 cp $README_URL /home/ec2-user/environment/README.md\n  else\n    curl -LSsf -o /home/ec2-user/environment/README.md $README_URL\n  fi\nfi\n\nif [ \"$TERMINAL_ON_STARTUP\" = \"true\" ]; then\n  STARTUP_EDITOR='terminal'\nelif [ -f /home/ec2-user/environment/README.md ]; then\n  STARTUP_EDITOR='readme'\nfi\n\necho \"Configuring code-server...\"\n\nsudo -u ec2-user bash -c 'mkdir -p ~/.local/share/code-server/User'\nsudo -u ec2-user bash -c 'touch ~/.local/share/code-server/User/settings.json'\ntee /home/ec2-user/.local/share/code-server/User/settings.json <<EOF\n{\n  \"extensions.autoUpdate\": false,\n  \"extensions.autoCheckUpdates\": false,\n  \"security.workspace.trust.enabled\": false,\n  \"workbench.startupEditor\": \"$STARTUP_EDITOR\",\n  \"task.allowAutomaticTasks\": \"on\",\n  \"telemetry.telemetryLevel\": \"off\"\n}\nEOF\n\nsudo -u ec2-user bash -c 'touch ~/.local/share/code-server/User/keybindings.json'\ntee /home/ec2-user/.local/share/code-server/User/keybindings.json << 'EOF'\n[\n  {\n    \"key\": \"shift+cmd+/\",\n    \"command\": \"remote.tunnel.forwardCommandPalette\"\n  }\n]\nEOF\n\nif [ ! -z \"${splashUrl}\" ]; then\necho \"Configuring splash URL...\"\n\nsudo -u ec2-user bash -c 'touch ~/.local/share/code-server/User/tasks.json'\ntee /home/ec2-user/.local/share/code-server/User/tasks.json << 'EOF'\n{\n  \"version\": \"2.0.0\",\n  \"tasks\": [\n    {\n      \"label\": \"Open Splash\",\n      \"command\": \"${!input:openSimpleBrowser}\",\n      \"presentation\": {\n        \"reveal\": \"always\",\n        \"panel\": \"new\"\n      },\n      \"runOptions\": {\n        \"runOn\": \"folderOpen\"\n      }\n    }\n  ],\n  \"inputs\": [\n    {\n      \"id\": \"openSimpleBrowser\",\n      \"type\": \"command\",\n      \"command\": \"simpleBrowser.show\",\n      \"args\": [\n        \"${splashUrl}\"\n      ]\n    }\n  ]\n}\nEOF\nfi\n\necho \"Installing code-server extensions...\"\n\nEXTENSIONS=\"${extensions}\"\n\nIFS=',' read -ra array <<< \"$EXTENSIONS\"\n\n# Iterate over each entry in the array\nfor extension in \"${!array[@]}\"; do\n  # Use retries as extension installation seems unreliable\n  sudo -u ec2-user bash -c \"set -e; (r=5;while ! code-server --install-extension $extension --force ; do ((--r))||exit;sleep 5;done)\"\ndone\n\nif [ ! -f \"/home/ec2-user/.local/share/code-server/coder.json\" ]; then\n  sudo -u ec2-user bash -c 'touch ~/.local/share/code-server/coder.json'\n  echo '{ \"query\": { \"folder\": \"/home/ec2-user/environment\" } }' > /home/ec2-user/.local/share/code-server/coder.json\nfi\n\necho \"Restarting code-server...\"\n\nsystemctl restart code-server@ec2-user\n\necho \"Installing Caddy...\"\n\n# Install caddy\ndnf copr enable -y -q @caddy/caddy epel-9-x86_64\ndnf install -y -q caddy\nsystemctl enable --now caddy\n\ntee /etc/caddy/Caddyfile <<EOF\nhttp://${domain} {\n  reverse_proxy 127.0.0.1:8889\n}\nEOF\n\necho \"Restarting caddy...\"\n\nsystemctl restart caddy\n\nif [ ! -f \"/home/ec2-user/.local/share/code-server/coder.json\" ]; then\n  sudo -u ec2-user bash -c 'touch ~/.local/share/code-server/coder.json'\n  echo '{ \"query\": { \"folder\": \"/home/ec2-user/environment\" } }' > /home/ec2-user/.local/share/code-server/coder.json\nfi\n\n${installGitea}\n\necho \"Running custom bootstrap script...\"\n\n${customBootstrapScript}\nHEREDOC\n\nexit_code=$?\n\n/opt/aws/bin/cfn-signal -e $exit_code '${waitConditionHandleUrl}'\n\nexit $exit_code",
+           {
+            "instanceIamRoleName": {
+             "Ref": "SharedRoleD1D02F7E"
+            },
+            "instanceIamRoleArn": {
+             "Fn::GetAtt": [
+              "SharedRoleD1D02F7E",
+              "Arn"
+             ]
+            },
+            "passwordName": {
+             "Fn::Join": [
+              "-",
+              [
+               {
+                "Fn::Select": [
+                 0,
+                 {
+                  "Fn::Split": [
+                   "-",
+                   {
+                    "Fn::Select": [
+                     6,
+                     {
+                      "Fn::Split": [
+                       ":",
+                       {
+                        "Ref": "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8"
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "Fn::Select": [
+                 1,
+                 {
+                  "Fn::Split": [
+                   "-",
+                   {
+                    "Fn::Select": [
+                     6,
+                     {
+                      "Fn::Split": [
+                       ":",
+                       {
+                        "Ref": "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8"
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             ]
+            },
+            "domain": {
+             "Fn::GetAtt": [
+              "EksAmWsAutoIDEIdeDistribution7292718F",
+              "DomainName"
+             ]
+            },
+            "codeServerVersion": "4.91.1",
+            "waitConditionHandleUrl": {
+             "Ref": "EksAmWsAutoIDEIdeBootstrapWaitConditionHandleEAF09AC0"
+            },
+            "customBootstrapScript": {
+             "Fn::Join": [
+              "",
+              [
+               "set -e\n\nexport AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)\nexport AWS_REGION=",
+               {
+                "Ref": "AWS::Region"
+               },
+               "\nexport RETAIL_STORE_APP_HELM_CHART_VERSION=",
+               {
+                "Ref": "RetailStoreHelmChartVersion"
+               },
+               "\nexport DEMO_CLUSTER_NODE_ROLE_NAME=",
+               {
+                "Ref": "DemoClusterNodeRoleE31E9BBC"
+               },
+               "\nexport DEMO_CLUSTER_NODE_ROLE_ARN=",
+               {
+                "Fn::GetAtt": [
+                 "DemoClusterNodeRoleE31E9BBC",
+                 "Arn"
+                ]
+               },
+               "\nexport DEMO_CLUSTER_ROLE_NAME=",
+               {
+                "Ref": "DemoClusterRoleE1419134"
+               },
+               "\nexport DEMO_CLUSTER_ROLE_ARN=",
+               {
+                "Fn::GetAtt": [
+                 "DemoClusterRoleE1419134",
+                 "Arn"
+                ]
+               },
+               "\nexport MIGRATION_CLUSTER_NODE_ROLE_NAME=",
+               {
+                "Ref": "MigrationClusterNodeRole8F3A3E1F"
+               },
+               "\nexport MIGRATION_CLUSTER_NODE_ROLE_ARN=",
+               {
+                "Fn::GetAtt": [
+                 "MigrationClusterNodeRole8F3A3E1F",
+                 "Arn"
+                ]
+               },
+               "\nexport MIGRATION_CLUSTER_ROLE_NAME=",
+               {
+                "Ref": "MigrationClusterRole5195CA93"
+               },
+               "\nexport MIGRATION_CLUSTER_ROLE_ARN=",
+               {
+                "Fn::GetAtt": [
+                 "MigrationClusterRole5195CA93",
+                 "Arn"
+                ]
+               },
+               "\nexport KUBERNETES_VERSION={{KUBERNETES_VERSION}}\nexport DEMO_CLUSTER_NAME=",
+               {
+                "Ref": "EksClusterName"
+               },
+               "\nexport MIGRATION_CLUSTER_NAME=",
+               {
+                "Ref": "EksClusterNameForMigrations"
+               },
+               "\nexport ASSET_BUCKET_NAME=",
+               {
+                "Fn::FindInMap": [
+                 "WorkshopAssetsBucketAssetsStaticBucketMapping",
+                 {
+                  "Ref": "AWS::Region"
+                 },
+                 "bucketName"
+                ]
+               },
+               "\nexport ASSET_BUCKET_PREFIX=aadbd25d-43fa-4ac3-ae88-32d729af8ed4/\nexport BUCKET_URI=\"s3://${ASSET_BUCKET_NAME}/${ASSET_BUCKET_PREFIX}\"\n\ntee /etc/profile.d/workshop-terraform.sh <<EOF\nexport AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}\nexport AWS_REGION=${AWS_REGION}\nexport RETAIL_STORE_APP_HELM_CHART_VERSION=${RETAIL_STORE_APP_HELM_CHART_VERSION}\nexport DEMO_CLUSTER_NAME=${DEMO_CLUSTER_NAME}\nexport DEMO_CLUSTER_NODE_ROLE_NAME=${DEMO_CLUSTER_NODE_ROLE_NAME}\nexport DEMO_CLUSTER_NODE_ROLE_ARN=${DEMO_CLUSTER_NODE_ROLE_ARN}\nexport DEMO_CLUSTER_ROLE_NAME=${DEMO_CLUSTER_ROLE_NAME}\nexport DEMO_CLUSTER_ROLE_ARN=${DEMO_CLUSTER_ROLE_ARN}\nexport MIGRATION_CLUSTER_NAME=${MIGRATION_CLUSTER_NAME}\nexport MIGRATION_CLUSTER_NODE_ROLE_NAME=${MIGRATION_CLUSTER_NODE_ROLE_NAME}\nexport MIGRATION_CLUSTER_NODE_ROLE_ARN=${MIGRATION_CLUSTER_NODE_ROLE_ARN}\nexport MIGRATION_CLUSTER_ROLE_NAME=${MIGRATION_CLUSTER_ROLE_NAME}\nexport MIGRATION_CLUSTER_ROLE_ARN=${MIGRATION_CLUSTER_ROLE_ARN}\nexport KUBERNETES_VERSION=${KUBERNETES_VERSION}\nexport ASSET_BUCKET_NAME=${ASSET_BUCKET_NAME}\nexport ASSET_BUCKET_PREFIX=${ASSET_BUCKET_PREFIX}\nexport BUCKET_URI=${BUCKET_URI}\nexport IDE_ROLE=$INSTANCE_IAM_ROLE_ARN \nEOF\n\nsource /etc/profile.d/workshop-terraform.sh\necho \"aws-region\" $AWS_REGION\necho $BUCKET_URI\n\nexport TERRAFORM_VERSION=1.12.2\ncurl -Lqs https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip\nunzip -q terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin\nchmod +x /usr/bin/terraform\nrm -rf terraform_${TERRAFORM_VERSION}_linux_amd64.zip\n\nexport HELM_VERSION=3.17.0\nexport HELM_VERSION=",
+               {
+                "Ref": "HelmVersion"
+               },
+               "\ncurl -Lqs https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -o helm-v${HELM_VERSION}-linux-amd64.tar.gz\ntar --strip-components=1 -C /usr/bin -xzf helm-v${HELM_VERSION}-linux-amd64.tar.gz linux-amd64/helm\nchmod +x /usr/bin/helm\nhelm completion bash > /etc/bash_completion.d/helm\nrm -rf helm-v${HELM_VERSION}-linux-amd64.tar.gz\n\nexport KUBECTL_VERSION=1.31.0\ncurl -Lqs https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o kubectl_${KUBECTL_VERSION}\nchmod +x kubectl_${KUBECTL_VERSION}\nmv kubectl_${KUBECTL_VERSION} /usr/bin/kubectl\n\n# eksctl\n# for ARM systems, set ARCH to: `arm64`, `armv6` or `armv7`\nARCH=amd64\nPLATFORM=$(uname -s)_$ARCH\ncurl -sLO \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz\"\n\n# (Optional) Verify checksum\ncurl -sL \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt\" | grep $PLATFORM | sha256sum --check\n\ntar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz\n\nsudo mv /tmp/eksctl /usr/local/bin\n\n# AWS CLI v2 - Handle nested zip files\ncurl -Lqs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip\nunzip -o -q /tmp/awscliv2.zip -d /tmp/awscliv2\n/tmp/awscliv2/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update\nrm -rf /tmp/awscliv2.zip /tmp/awscliv2\naws --version\nwhich aws\naws sts get-caller-identity\n\ntemp_enable_folder=/tmp/auto-mode-enable\naws s3 cp ${BUCKET_URI}enable-terraform.zip /tmp/enable-terraform.zip\nunzip -o -q /tmp/enable-terraform.zip -d $temp_enable_folder\nsudo mv $temp_enable_folder/enable /home/ec2-user/environment || true # true to not break testing\nchown -R ec2-user:ec2-user /home/ec2-user || true # true to not break testing\n\nsudo curl --silent --location \"https://go.dev/dl/go1.23.1.linux-amd64.tar.gz\" | sudo tar xz -C /usr/local\n\n# kubectx / kubens\nsudo git clone https://github.com/ahmetb/kubectx /opt/kubectx\nsudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx\nsudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens\n\n\n# bash completion\n# Use bash-completion, if available\n[[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && \\\n    . /usr/share/bash-completion/bash_completion\n\n# kubectl completion\nkubectl completion bash | tee /etc/bash_completion.d/kubectl > /dev/null\nchmod a+r /etc/bash_completion.d/kubectl\n\n# rm -rf /tmp/assets/awsCliLinuxX86Exe.zip /tmp/awscliv2\nyum -y install make zsh telnet jq strace tree gcc glibc-static python3 python3-pip gettext bash-completion npm zsh util-linux-user locate\n\n# Update Kubernetes Config for ec2-user\naws eks update-kubeconfig --region ${AWS_REGION} --name ${MIGRATION_CLUSTER_NAME} --kubeconfig /home/ec2-user/.kube/config\naws eks update-kubeconfig --region ${AWS_REGION} --name ${DEMO_CLUSTER_NAME} --kubeconfig /home/ec2-user/.kube/config\n\n# Bootstrap runs as root, make sure all permissions are set to the ec2-user.\nchown -R ec2-user:ec2-user /home/ec2-user\n\n\nsudo su - ec2-user <<EOF\nset -x\n\necho \"export TERM=xterm-color\" >> ~/.bashrc\necho \"alias code=/usr/lib/code-server/bin/code-server\" >> ~/.bashrc\necho \"alias k=kubectl\" >> ~/.bashrc\necho \"complete -F __start_kubectl k\" >> ~/.bashrc\ncurl -sS https://webinstall.dev/k9s | bash\n\nEOF\n\n\n# #Install zsh\n# sudo -k chsh -s /bin/zsh ec2-user\n# jq '. + {\"terminal.integrated.defaultProfile.linux\": \"zsh\"}' /home/ec2-user/.local/share/code-server/User/settings.json > temp.json && mv temp.json /home/ec2-user/.local/share/code-server/User/settings.json\n# rm -rf ~/.oh-my-zsh\n\n# wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh\n# CHSH=no RUNZSH=no sh install.sh\n\n# git clone https://github.com/romkatv/powerlevel10k.git ~/.oh-my-zsh/custom/themes/powerlevel10k\n# git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting\n# git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions\n# git clone https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search\n\n# echo \"export TERM=xterm-color\" >> ~/.bashrc\n# echo \"alias code=/usr/lib/code-server/bin/code-server\" >> ~/.bashrc\n# echo \"alias k=kubectl\" >> ~/.bashrc\n# echo \"complete -F __start_kubectl k\" >> ~/.bashrc\n# curl -sS https://webinstall.dev/k9s | bash\n\n# EOF"
+              ]
+             ]
+            },
+            "installGitea": "",
+            "splashUrl": "",
+            "readmeUrl": "",
+            "environmentContentsZip": "",
+            "extensions": "",
+            "terminalOnStartup": "true"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "DocumentFormat": "YAML",
+    "DocumentType": "Command",
+    "UpdateMethod": "NewVersion"
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdeBootstrapResource3CC01A43": {
+   "Type": "AWS::CloudFormation::CustomResource",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdeBootstrapFunction914F42EB",
+      "Arn"
+     ]
+    },
+    "InstanceId": {
+     "Ref": "EksAmWsAutoIDE42A875CF641a0cee2d30d2eb"
+    },
+    "SsmDocument": {
+     "Ref": "EksAmWsAutoIDEIdeBootstrapDocument96A13CAC"
+    },
+    "LogGroupName": {
+     "Ref": "EksAmWsAutoIDEIdeLogGroup870441C6"
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRole9D856F7D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRoleDefaultPolicy8D85FED5": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRoleDefaultPolicy8D85FED5",
+    "Roles": [
+     {
+      "Ref": "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRole9D856F7D"
+     }
+    ]
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePasswordExporterFunctionC1C334A3": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "import traceback\nimport cfnresponse\nimport boto3\nimport json\n\ndef lambda_handler(event, context):\n    print('Event: {}'.format(event))\n    print('context: {}'.format(context))\n    responseData = {}\n\n    status = cfnresponse.SUCCESS\n\n    if event['RequestType'] == 'Delete':\n        cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')\n    else:\n        try:\n            passwordName = event['ResourceProperties']['PasswordName']\n\n            secretsmanager = boto3.client('secretsmanager')\n\n            response = secretsmanager.get_secret_value(\n                SecretId=passwordName,\n            )\n            \n            responseData = json.loads(response['SecretString'])\n        except Exception as e:\n            status = cfnresponse.FAILED\n            tb_err = traceback.format_exc()\n            print(tb_err)\n            responseData = {'Error': tb_err}\n        finally:\n            cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')"
+    },
+    "Handler": "index.lambda_handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRole9D856F7D",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 180
+   },
+   "DependsOn": [
+    "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRoleDefaultPolicy8D85FED5",
+    "EksAmWsAutoIDEIdePasswordExporterFunctionServiceRole9D856F7D",
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ]
+  },
+  "EksAmWsAutoIDEIdePasswordExporter9A47E0C3": {
+   "Type": "AWS::CloudFormation::CustomResource",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "EksAmWsAutoIDEIdePasswordExporterFunctionC1C334A3",
+      "Arn"
+     ]
+    },
+    "PasswordName": {
+     "Fn::Join": [
+      "-",
+      [
+       {
+        "Fn::Select": [
+         0,
+         {
+          "Fn::Split": [
+           "-",
+           {
+            "Fn::Select": [
+             6,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Ref": "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "-",
+           {
+            "Fn::Select": [
+             6,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Ref": "EksAmWsAutoIDEIdePasswordSecret2A4D2DE8"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "EksAmWsBaseClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsBaseClusterCreationReportBuildFunctionAD9A26A84193AFCF",
+    "EksAmWsBaseClusterCreationBuildCompleteRule2F97C23D",
+    "EksAmWsBaseClusterCreationClusterStackFC310D2C",
+    "EksAmWsBaseClusterCreationReportBuildFunctionBB5B677A",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleDefaultPolicy0EC9B175",
+    "EksAmWsBaseClusterCreationReportBuildFunctionServiceRoleB86659D0",
+    "EksAmWsBaseClusterCreationStackDeployProjectE4434511",
+    "EksAmWsBaseClusterCreationStartBuildFunctionC4DCB78C",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleDefaultPolicy8EAE3939",
+    "EksAmWsBaseClusterCreationStartBuildFunctionServiceRoleC699C9BA",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRuleAllowEventRuleeksautomodeworkshopEksAmWsMigrationsClusterCreationReportBuildFunctionBC7F24B543F6546B",
+    "EksAmWsMigrationsClusterCreationBuildCompleteRule3B1836BA",
+    "EksAmWsMigrationsClusterCreationClusterStack9CB0ECB9",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionC02C4627",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRoleDefaultPolicy3B6334E6",
+    "EksAmWsMigrationsClusterCreationReportBuildFunctionServiceRole573EBDEB",
+    "EksAmWsMigrationsClusterCreationStackDeployProjectACA21991",
+    "EksAmWsMigrationsClusterCreationStartBuildFunction73EFDD36",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRoleDefaultPolicy65D2F2CA",
+    "EksAmWsMigrationsClusterCreationStartBuildFunctionServiceRole4267339F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  }
+ },
+ "Mappings": {
+  "WorkshopAssetsBucketAssetsStaticBucketMapping": {
+   "eu-north-1": {
+    "bucketName": "ws-assets-prod-iad-r-arn-580aeca3990cef5a"
+   },
+   "ap-south-1": {
+    "bucketName": "ws-assets-prod-iad-r-bom-431207042d319a2d"
+   },
+   "eu-west-3": {
+    "bucketName": "ws-assets-prod-iad-r-cdg-9e76383c31ad6229"
+   },
+   "us-east-2": {
+    "bucketName": "ws-assets-prod-iad-r-cmh-8d6e9c21a4dec77d"
+   },
+   "eu-west-1": {
+    "bucketName": "ws-assets-prod-iad-r-dub-85e3be25bd827406"
+   },
+   "eu-central-1": {
+    "bucketName": "ws-assets-prod-iad-r-fra-b129423e91500967"
+   },
+   "sa-east-1": {
+    "bucketName": "ws-assets-prod-iad-r-gru-527b8c19222c1182"
+   },
+   "us-east-1": {
+    "bucketName": "ws-assets-prod-iad-r-iad-ed304a55c2ca1aee"
+   },
+   "ap-northeast-2": {
+    "bucketName": "ws-assets-prod-iad-r-icn-ced060f0d38bc0b0"
+   },
+   "ap-northeast-3": {
+    "bucketName": "ws-assets-prod-iad-r-kix-c2a28ad4e55ea53a"
+   },
+   "eu-west-2": {
+    "bucketName": "ws-assets-prod-iad-r-lhr-cc4472a651221311"
+   },
+   "ap-northeast-1": {
+    "bucketName": "ws-assets-prod-iad-r-nrt-2cb4b4649d0e0f94"
+   },
+   "us-west-2": {
+    "bucketName": "ws-assets-prod-iad-r-pdx-f3b3f9f1a7d6a3d0"
+   },
+   "us-west-1": {
+    "bucketName": "ws-assets-prod-iad-r-sfo-f61fc67057535f1b"
+   },
+   "ap-southeast-1": {
+    "bucketName": "ws-assets-prod-iad-r-sin-694a125e41645312"
+   },
+   "ap-southeast-2": {
+    "bucketName": "ws-assets-prod-iad-r-syd-b04c62a5f16f7b2e"
+   },
+   "ca-central-1": {
+    "bucketName": "ws-assets-prod-iad-r-yul-5c2977cd61bca1f3"
+   }
+  }
+ },
+ "Outputs": {
+  "IdeUrl": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Fn::GetAtt": [
+        "EksAmWsAutoIDEIdeDistribution7292718F",
+        "DomainName"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "IdePassword": {
+   "Value": {
+    "Fn::GetAtt": [
+     "EksAmWsAutoIDEIdePasswordExporter9A47E0C3",
+     "password"
+    ]
+   }
+  }
+ }
+}
